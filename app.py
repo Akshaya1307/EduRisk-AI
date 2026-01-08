@@ -1,7 +1,7 @@
 # ==================================================
 # EduRisk AI - Academic Risk Intelligence Platform
-# Microsoft Imagine Cup 2026 - FINAL LOGIC-CORRECT VERSION
-# Local Simulation (No Azure Dependency)
+# Microsoft Imagine Cup 2026
+# UI-ENHANCED | LOGIC UNCHANGED
 # ==================================================
 
 import streamlit as st
@@ -11,181 +11,170 @@ import time
 
 # ==================== PAGE CONFIG ====================
 st.set_page_config(
-    page_title="EduRisk AI | Academic Risk Intelligence",
+    page_title="EduRisk AI",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
+# ==================== CUSTOM CSS ====================
+st.markdown("""
+<style>
+body {
+    background-color: #F9FAFB;
+}
+.main-title {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #0078D4, #00BCF2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.subtitle {
+    text-align: center;
+    color: #6B7280;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+}
+.risk-high {
+    background: linear-gradient(135deg, #FEE2E2, #FCA5A5);
+    color: #7F1D1D;
+}
+.risk-medium {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    color: #92400E;
+}
+.risk-low {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    color: #065F46;
+}
+.risk-banner {
+    padding: 20px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+.weak-card {
+    background: #FFFBEB;
+    border-left: 6px solid #F59E0B;
+    padding: 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 20px 0 10px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ==================== SIMULATED AZURE ML ====================
 class SimulatedAzureML:
-    def predict(self, features):
+    def predict(self, f):
         time.sleep(1.2)
 
-        # Normalize inputs
-        attendance = features["attendance_pct"]
-        assignment = features["assignment_score"]
-        quiz = features["quiz_score"]
-        midterm = features["midterm_score"]
+        study_norm = min(f["study_hours_per_week"], 20) / 20 * 100
+        gpa_norm = f["previous_gpa"] * 10
 
-        study_hours_norm = min(features["study_hours_per_week"], 20) / 20 * 100
-        gpa_norm = features["previous_gpa"] * 10
-
-        weighted_score = (
-            attendance * 0.25 +
-            assignment * 0.20 +
-            quiz * 0.20 +
-            midterm * 0.25 +
-            study_hours_norm * 0.05 +
+        score = (
+            f["attendance_pct"] * 0.25 +
+            f["assignment_score"] * 0.20 +
+            f["quiz_score"] * 0.20 +
+            f["midterm_score"] * 0.25 +
+            study_norm * 0.05 +
             gpa_norm * 0.05
         )
 
-        # 🚨 HARD OVERRIDE — CRITICAL FAILURES
         if (
-            attendance < 60 or
-            assignment < 50 or
-            quiz < 50 or
-            midterm < 50 or
-            features["study_hours_per_week"] < 5 or
-            features["previous_gpa"] < 5.0
+            f["attendance_pct"] < 60 or
+            f["assignment_score"] < 50 or
+            f["quiz_score"] < 50 or
+            f["midterm_score"] < 50 or
+            f["study_hours_per_week"] < 5 or
+            f["previous_gpa"] < 5.0
         ):
-            return {
-                "risk_level": "High",
-                "confidence": 0.95,
-                "weighted_score": weighted_score
-            }
+            return {"risk": "High", "confidence": 0.95, "score": score}
 
-        # Normal thresholds
-        if weighted_score < 55:
-            risk = "High"
-            confidence = 0.90
-        elif weighted_score < 70:
-            risk = "Medium"
-            confidence = 0.85
+        if score < 55:
+            return {"risk": "High", "confidence": 0.90, "score": score}
+        elif score < 70:
+            return {"risk": "Medium", "confidence": 0.85, "score": score}
         else:
-            risk = "Low"
-            confidence = 0.88
+            return {"risk": "Low", "confidence": 0.88, "score": score}
 
-        return {
-            "risk_level": risk,
-            "confidence": confidence,
-            "weighted_score": weighted_score
-        }
-
-# ==================== SIMULATED AZURE OPENAI ====================
-class SimulatedAzureOpenAI:
-    def generate_guidance(self, risk_level, weak_areas):
-        time.sleep(1.5)
-
-        weak_text = "\n".join([f"• {w}" for w in weak_areas]) if weak_areas else "• No weak areas detected"
+# ==================== SIMULATED OPENAI ====================
+class SimulatedOpenAI:
+    def guidance(self, risk, weak):
+        time.sleep(1.3)
+        weak_text = "\n".join([f"• {w}" for w in weak]) if weak else "• No major weak areas"
 
         plans = {
             "High": f"""
-### 🔴 URGENT 7-DAY RECOVERY PLAN
-
-**Identified Problems**
+### 🔴 URGENT RECOVERY PLAN
 {weak_text}
 
-**Immediate (Days 1–2)**
-• Mandatory advisor meeting  
-• Contact professors  
-• 100% attendance  
-• Submit pending work  
-
-**Days 3–7**
-• 5–6 hrs/day focused study  
-• Daily tutoring for weak subjects  
-• Practice tests + revision  
-
-**Goal:** Move all metrics above minimum academic thresholds
+• Meet academic advisor immediately  
+• 5–6 hours focused study daily  
+• Mandatory tutoring  
+• Strict attendance tracking  
 """,
-
             "Medium": f"""
-### 🟡 FOCUSED IMPROVEMENT PLAN
-
-**Areas to Improve**
+### 🟡 IMPROVEMENT PLAN
 {weak_text}
 
-**Daily Routine**
-• 3–4 hrs study  
-• Focus on weakest subject  
-• Weekly office hours  
-
-**Goal:** Push performance into safe academic zone
+• 3–4 hours structured study  
+• Focus weakest subject daily  
+• Weekly progress review  
 """,
-
             "Low": """
-### 🟢 EXCELLENCE & GROWTH PLAN
+### 🟢 EXCELLENCE PLAN
 
-• Maintain strong habits  
+• Maintain consistency  
 • Peer mentoring  
 • Advanced learning projects  
-• Internship / competition preparation  
-
-**Goal:** Academic excellence & leadership
 """
         }
-
-        return plans[risk_level]
+        return plans[risk]
 
 # ==================== VISUALS ====================
-def gauge(value, title):
-    color = "#10B981" if value >= 75 else "#F59E0B" if value >= 60 else "#EF4444"
+def gauge(val, title):
+    color = "#10B981" if val >= 75 else "#F59E0B" if val >= 60 else "#EF4444"
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
-        value=value,
+        value=val,
         title={"text": title},
-        gauge={
-            "axis": {"range": [0, 100]},
-            "bar": {"color": color},
-            "steps": [
-                {"range": [0, 60], "color": "#FEE2E2"},
-                {"range": [60, 75], "color": "#FEF3C7"},
-                {"range": [75, 100], "color": "#D1FAE5"},
-            ]
-        }
+        gauge={"axis": {"range": [0, 100]}, "bar": {"color": color}}
     ))
     fig.update_layout(height=250)
     return fig
 
-def radar(scores):
-    categories = ["Attendance", "Assignments", "Quizzes", "Midterm", "Study Hours", "GPA"]
-    values = [
-        scores["attendance"],
-        scores["assignment"],
-        scores["quiz"],
-        scores["midterm"],
-        min(scores["study_hours"] * 5, 100),
-        scores["gpa"] * 10
-    ]
-
-    fig = go.Figure(go.Scatterpolar(
-        r=values + [values[0]],
-        theta=categories + [categories[0]],
-        fill="toself"
-    ))
-    fig.update_layout(polar=dict(radialaxis=dict(range=[0, 100])), showlegend=False)
-    return fig
-
-# ==================== MAIN APP ====================
+# ==================== MAIN ====================
 def main():
     ml = SimulatedAzureML()
-    ai = SimulatedAzureOpenAI()
+    ai = SimulatedOpenAI()
 
-    st.markdown("<h1 style='text-align:center;'>🎓 EduRisk AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center;'>Academic Risk Intelligence (Local Demo)</p>", unsafe_allow_html=True)
+    st.markdown('<div class="main-title">🎓 EduRisk AI</div>', unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Academic Risk Intelligence Platform</div>', unsafe_allow_html=True)
 
     with st.sidebar:
-        st.header("Student Metrics")
-
+        st.markdown("### 👤 Student Profile")
         attendance = st.slider("Attendance (%)", 0, 100, 75)
         assignment = st.slider("Assignment Score", 0, 100, 65)
         quiz = st.slider("Quiz Score", 0, 100, 60)
         midterm = st.slider("Midterm Score", 0, 100, 62)
-        study_hours = st.slider("Study Hours / Week", 0, 40, 10)
+        study = st.slider("Study Hours / Week", 0, 40, 10)
         gpa = st.slider("Previous GPA (0–10)", 0.0, 10.0, 6.5)
-
-        analyze = st.button("Analyze Risk")
+        analyze = st.button("🔍 Analyze Risk", type="primary", use_container_width=True)
 
     if analyze:
         features = {
@@ -193,55 +182,43 @@ def main():
             "assignment_score": assignment,
             "quiz_score": quiz,
             "midterm_score": midterm,
-            "study_hours_per_week": study_hours,
+            "study_hours_per_week": study,
             "previous_gpa": gpa
         }
 
-        scores = {
-            "attendance": attendance,
-            "assignment": assignment,
-            "quiz": quiz,
-            "midterm": midterm,
-            "study_hours": study_hours,
-            "gpa": gpa
-        }
-
-        weak_areas = []
-        if attendance < 75: weak_areas.append(f"Attendance ({attendance}%)")
-        if assignment < 60: weak_areas.append(f"Assignments ({assignment}%)")
-        if quiz < 60: weak_areas.append(f"Quizzes ({quiz}%)")
-        if midterm < 60: weak_areas.append(f"Midterm ({midterm}%)")
-        if study_hours < 10: weak_areas.append(f"Study Hours ({study_hours}/week)")
-        if gpa < 6.0: weak_areas.append(f"GPA ({gpa}/10)")
+        weak = []
+        if attendance < 75: weak.append(f"Attendance ({attendance}%)")
+        if assignment < 60: weak.append(f"Assignments ({assignment}%)")
+        if quiz < 60: weak.append(f"Quizzes ({quiz}%)")
+        if midterm < 60: weak.append(f"Midterm ({midterm}%)")
+        if study < 10: weak.append(f"Study Hours ({study}/week)")
+        if gpa < 6.0: weak.append(f"GPA ({gpa}/10)")
 
         with st.spinner("Analyzing academic risk..."):
-            prediction = ml.predict(features)
+            pred = ml.predict(features)
 
         st.markdown("---")
-        st.subheader(f"Risk Level: {prediction['risk_level']}")
-        st.write(f"Confidence: {prediction['confidence']*100:.0f}%")
-        st.write(f"Overall Score: {prediction['weighted_score']:.1f}/100")
+        st.markdown(
+            f'<div class="risk-banner risk-{pred["risk"].lower()}">Risk Level: {pred["risk"]}</div>',
+            unsafe_allow_html=True
+        )
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             st.plotly_chart(gauge(attendance, "Attendance"), use_container_width=True)
         with col2:
-            st.plotly_chart(gauge(np.mean([assignment, quiz, midterm]), "Academic Average"), use_container_width=True)
+            st.plotly_chart(gauge(np.mean([assignment, quiz, midterm]), "Academic Avg"), use_container_width=True)
+        with col3:
+            st.metric("Overall Score", f"{pred['score']:.1f}/100", f"{pred['confidence']*100:.0f}% confidence")
 
-        st.plotly_chart(radar(scores), use_container_width=True)
-
-        if weak_areas:
+        if weak:
             st.markdown("### ⚠️ Weak Areas")
-            for w in weak_areas:
-                st.markdown(f"- **{w}**")
+            for w in weak:
+                st.markdown(f'<div class="weak-card">{w}</div>', unsafe_allow_html=True)
 
-        st.markdown("---")
-        st.subheader("🤖 Personalized Guidance")
-
+        st.markdown("### 🤖 Personalized Guidance")
         with st.spinner("Generating guidance..."):
-            guidance = ai.generate_guidance(prediction["risk_level"], weak_areas)
-
-        st.markdown(guidance)
+            st.markdown(ai.guidance(pred["risk"], weak))
 
 if __name__ == "__main__":
     main()
